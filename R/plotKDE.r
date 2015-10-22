@@ -203,7 +203,7 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
 #   }
 
   #create plot:
-  lw<-rel(0.5)
+  lw<-rel(0.6)
   hw<-rel(0.2)
   g<-ggplot()
 
