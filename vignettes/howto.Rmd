@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# 1. Introduction {#intro}
+# Introduction {#intro}
 Package `provenance` provides functions for the visualisation of typical data utilised in sediment provenance analysis in the geosciences, as well as helper functions aiding data analysis. Plotting takes advantage of the framework provided by the `ggplot2` package, and the output plots are ggplot objects, which allows for further modification with `ggplot2`'s functions and easy saving of the graphics. This document is meant for geoscientists who want to get step-by-step guidelines for using `provenance`'s plotting functions, and who might not be experienced users of the R language.  
 The "workhorse functions" of the package are:
 
@@ -17,15 +17,13 @@ The "workhorse functions" of the package are:
 
 `plotMDS()` provides plotting of multidimensional scaling (**MDS**) maps for quick visual identification of trends and similar groups within a set of sample data
 
-`plot3Way()` is designed to be very similar to `plotMDS()`, providing individual scaling (or **3-way MDS**) maps of data sets combining several different provenance proxies
-
 Working with provenance data using the `ggprovenance` package in R typically involves three main steps:
 
-1. load data files, filter and reformat input data for use
+1. load data files, possibly filter and reformat input data for use
 2. plot visualisation of data
 3. save output
 
-Of these steps, 2 usually is an iterative "trial-and-error" process to determine best graphical representation of the data, with a few additional calculations necessary here and there. Step 3 is, due to `ggplot2`'s functionality, a trivial call to `ggsave()`. The first item, loading the data, is usually the most involved and requires the user to write their own scripts for the purpose, as this can not easily be standardised over the wide range of possible data file formats and the individual requirements of each user. This step can be further subdivided into:
+Of these steps, 2 usually is an iterative "trial-and-error" or gradual improvement process to determine best graphical representation of the data, with a few additional calculations necessary here and there. Step 3 is, due to `ggplot2`'s functionality, a trivial call to `ggsave()`. The first item, loading the data, is usually the most involved and might require the user to write their own scripts for the purpose, as this can not easily be standardised over the wide range of possible data file formats and the individual requirements of each user. This step can be further subdivided into:
 
 > 1a. loading data files  
 > 1b. reformattiong data  
@@ -42,25 +40,201 @@ library(ggprovenance)
 ```
 
 ## Loading data
-For this document, we use example data files installed with `provenance`, but the principles would be the same for any other data file. Simple example data files are provided in the /inst subfolder of the package installation folder, these can serve as an example of how to prepare data. Alternatively, the data loading process can be adapted to the existing data files, and the data restructured in R, to obtain objects suitable for the plotting functions. The latter approach is preferrable, as it leaves the original data files untouched, and new and altered data is easily replotted by simply re-running the R script, instead of preparing intermediate data files by hand. See also section [Tips & Tricks](#import) for notes on how to import  lists of individual data files and MS Excel files.
+For this document, we use example data files installed with `ggprovenance`, but the principles would be the same for any other data file. Simple example data files are provided in the `/extdata` subfolder of the package installation folder, these can serve as an example of how to prepare data. Alternatively, the data loading process can be adapted to the existing data files, and the data restructured in R, to obtain objects suitable for the plotting functions. The latter approach is preferrable, as it leaves the original data files untouched, and new and altered data is easily replotted by simply re-running the R script, instead of preparing intermediate data files by hand. See also section [Tips & Tricks](#import) for notes on how to import lists of individual data files and MS Excel files.
 
 ### Loading data files
-In the /inst folder, there is a simple example file of detrital zircon U-Pb ages. The individual measured ages are arranged column-wise, one column per sample, with the sample names in the first line.  
+In the `/extdata` folder, there is a simple example file of detrital zircon U-Pb ages. The individual measured ages are arranged column-wise, one column per sample, with the sample names in the first line.  
 ```{r, results='asis', echo=FALSE}
 table<-read.xls(xls=system.file("extdata", "Tarim.xls", package="ggprovenance"),stringsAsFactors=FALSE)
 knitr::kable(table[1:6,],format="markdown")
 ```
 
-To load this data, you could use:
+To load this data, you could use the included function `read.xls.flat()`:
 ```{r}
 agedata<-read.xls.flat(system.file("extdata", "Tarim.xls", package="ggprovenance"))
 ```
 
-The data table is loaded with `read.csv()`, the result is a data frame. The default behaviour of R is to convert character vectors into factors (see R help); since `read.csv()` reads the (text) file with headers first, and more importantly in the case of reading Excel files (see [Tips & Tricks](#tips)) which are converted in csv files in an intermediate step in the background, numerical values can end up being interpreted as factors of strings that look like numbers, but cause nothing but headaches and confusion. For most cases discussed here, factors should be avoided.  
-The functions within `provenance` generally work with lists, where each element of the list would be a vector of ages for one sample, respectively. Since data frames are a suclass of list, no further conversion is needed.  
+Two small helper functions are provided with `ggprovenance`, `read.xls.flat()` and `read.xls.tabbed()`, which are wrappers around `gdata`'s `read.xls()` function, adapted for two common cases: Excel files with either data in one worksheet, one column per sample, or data contained in a file with one worksheet per sample, although it is assumed that the column name for the data of interest within each worksheet is the same. Please note that `gdata` needs a working perl installation, which is usually the case on *nix-based operating systems, but requires extra instllation steps under Windows, see [Section 5](#tips).  
+Another common file format are comma-separated values (csv) files, which can be read with `read.table()` and its derivates, from the `utils` package. This is typically contained in a base installation of R, and thus does not require installing further packages or dependencies.  
+
 Before plotting, we can have a look at some properties of the data:
 ```{r}
 names(agedata)
 ```
 
-We see there is data from three sampling sites, two of which are comprised of several subsamples, three potential source areas ("Area 1 - 3"), a river sample and a bedrock sample.
+### Adding information for visualisation
+For e.g. colouring purposes, additional information can be added to the data. For example, we might classify our data into general source areas. `plotKDE()` allows to provide a data.frame in parameter `categories` for this purpose. We prepare a data.frame with the desired properties in columns (here: `area`), and the sample names set as `row.names` (see section [section 3](#examples) for an easier way to achieve this).
+```{r}
+cats<-data.frame(area=rep("n/a",length(agedata)),stringsAsFactors=FALSE)
+row.names(cats)<-names(agedata)
+cats$area[grep("Tb04",row.names(cats))]<-"Tarim"
+cats$area[grep("Tb21",row.names(cats))]<-"Taklamakan"
+cats$area[grep("Tb22",row.names(cats))]<-"Taklamakan"
+cats$area[grep("Tb35",row.names(cats))]<-"Kunlun"
+cats$area[grep("Tb38",row.names(cats))]<-"Kunlun"
+cats$area[grep("Tb50",row.names(cats))]<-"Tian Shan"
+```
+
+The area name of each data set in `data` is now recorded in `smplarea` (we'll use this later):
+```{r, results='asis', echo=FALSE}
+knitr::kable(cats,format="markdown")
+```
+
+## Plotting data
+To get a quick look at the loaded data, `plotKDE()` is a good point to start.
+```{r}
+plotKDE(agedata)
+```
+
+With the `cats` variable we genrated, and some additional adjustments, we can make this a little clearer. See the [examples](#examples) and help files for details.
+```{r}
+plotKDE(agedata,categories=cats,markers="dash",stack = "close",limits=c(0,3500),mapping=aes(fill=area))
+```
+
+## Saving the output
+Since plots generated with `ggprovenance` are also ggplot objects, `ggsave()` from package `ggplot2` can be utilised for saving in a wide range of file formats.
+```{r eval=FALSE}
+ggsave("~/test.pdf",width=10,height=8)
+```
+
+Adapt the output path, file format (indicated simply by the file extension) and sizes to your needs. You can also save a specific plot, if you stored it in a variable earlier:
+```{r eval=FALSE}
+p1<-plotKDE(agedata)
+
+#
+# ... a lot of clever code here, generating other plots (p2, p3,...)
+#
+
+ggsave(plot=p1,filename="~/test.png",dpi=300,width=10,height=8)
+# save p2, p3,...
+```
+
+
+\pagebreak
+
+# Examples and detailed description of parameters {#examples}
+In the following, the effects of the many different parameters for the plotting functions are illustrated by example plots. The examples assume `agedata` loaded as described previously. Many of the parameters can be used together (see examples at the end of this section), not all possible combinations can be detailed here.
+
+## `plotKDE()`
+The full function call to plotKDE is:  
+```{r eval=FALSE}
+plotKDE(ages, title, limits = c(0, 3000), breaks = NA, bandwidth = NA,
+  plotonly = names(ages), splitat = NA, categories = NA,
+  markers = c("none", "dash", "circle"), logx = FALSE, hist = FALSE,
+  binwidth = bandwidth, adaptive = TRUE, stack = c("equal", "close",
+  "dense"), normalise = c("area", "height", "none"), lowcount = 80,
+  mapping = NA)
+```
+See the help files for details.
+
+> Disclaimer: as of the time of writing (`r Sys.Date()`), not all parameters are functional yet.
+
+The simplest call plots KDEs for all elements of `data`. Each plot is assigned an individual colour, the default age range is 0 - 3000 Ma, bandwidth is chosen automatically.
+```{r}
+plotKDE(agedata)
+```
+
+The `plotonly` parameter allows to select specific data sets (samples) by their names. The below example has the same effect as subsetting the data provided to the function like in e.g. `plotKDE(agedata[["Tb22"]])` or `plotKDE(agedata$Tb22)`. Note automatic removal of the legend, as it is obsolete here.
+```{r}
+  plotKDE(agedata,plotonly=c("Tb22"))
+```
+
+Add histograms.
+```{r}
+plotKDE(agedata,plotonly=c("Tb22"),hist=TRUE)
+```
+
+Add data markers. Possible values are `"dash"` for little tick marks and `"circle"` for semi-transparent circles.
+```{r}
+plotKDE(data2,plotonly=c("site1"),markers="dash")
+```
+
+Custom breaks. The `breaks` parameter overrides `limits`, i.e. if any breaks lie outside the limits, the limits will be expanded accordingly.
+```{r}
+plotKDE(data2,plot=c("site1"),breaks=seq(200,2600,200))
+```
+
+Change x- (time-) limits. Set limits to -1 to automatically use the range of values contained in `data`.
+```{r}
+plotKDE(data2, limits=c(50,600))
+```
+
+Logarithmic x-scale.
+```{r}
+plotKDE(data2,logx=TRUE)
+```
+
+Split plot at a certain age, the two sub-ranges will occupy equal space (useful to emphasise the younger ages).
+```{r}
+plotKDE(data2,splitat=600)
+```
+
+Splitting can be combined with custom ranges for the two half plots. A `limits` parameter of length 4 will override `splitat`.
+```{r}
+plotKDE(data2,limits=c(50,600,1600,2800))
+```
+
+Usually, an "optimal bandwidth" is calculated automatically, and the average of all optimal bandwidths for all data series is set equally for all KDEs. It can also be set manually.
+```{r}
+plotKDE(data2, bandwidth=16)
+```
+
+To plot each KDE with it's own optimal bandwidth, set `bandwidth=-1` (note that this sometimes leads to unexpected results, i.e. severe oversmoothing in data sets with very few data or very regular data distribution, see "Area1").
+```{r}
+plotKDE(data2,bandwidth=-1)
+```
+
+The `classes` parameter allows the data to be classified based on the individual values encountered in the supplied vector. The classes vector must be of the same length as data, after selection by `plot`. Set `classes=-1` to plot all KDEs in the same colour.
+```{r}
+datatype2<-rep("n/a",length(data2))
+names(datatype2)<-names(data2)
+datatype2[grep("site",names(datatype2))]<-"sampling site"
+datatype2[grep("Area",names(datatype2))]<-"source area"
+datatype2[grep("River",names(datatype2))]<-"river"
+datatype2[grep("bedrock",names(datatype2))]<-"bed rock"
+plotKDE(data2,classes=datatype2)
+```
+
+The `fcolour` parameter allows to specify the fill colour(s) for all KDEs or the provided classes:
+```{r}
+plotKDE(data2,fcolour="#AAAAEE88")
+```
+
+`order`
+
+`method`
+
+### Examples of combining parameters:
+Nicest combined colour plot
+select only sampling sites
+plotKDE(data2,plot=c("site1","site2","site3"),limits=c(150,600),bandwidth=10,markers="circle")
+custom breaks on alog scale
+
+Publication-quality pure black & white plot
+```{r}
+plotKDE(data2,fcolour="black")+theme(panel.background=element_blank(),
+	panel.grid=element_blank(),axis.ticks=element_line(colour="black"),
+	axis.text=element_text(size=rel(0.8), colour="black"))
+```
+
+## `plotMDS()`
+```{r eval=FALSE}
+plotMDS(mds, diss, col="", sym="", nearest=TRUE, labels=TRUE, symbols=TRUE,
+	fcolour=NA, stretch=FALSE)
+```
+
+## `plot3Way()`
+
+## other useful functions
+
+### `plotShepard()`
+```{r eval=FALSE}
+plotShepard(mds, diss, xlab="dissimilarity", ylab="distance", title="")
+```
+
+### `dissimilarity()`
+```{r eval=FALSE}
+dissimilarity(data, metric="K-S")
+```
+
+\pagebreak

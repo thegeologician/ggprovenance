@@ -99,11 +99,11 @@
 #' @export
 #'
 plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
-                  plotonly=names(ages),splitat=NA,categories=NA,
+                  plotonly=names(ages),splitat=NA,categories,
                   markers=c("none","dash","circle"),logx=FALSE,hist=FALSE,
                   binwidth=bandwidth,adaptive=TRUE,
                   stack=c("equal","close","dense"),
-                  normalise=c("area","height","none"),lowcount=80,mapping=NA){
+                  normalise=c("area","height","none"),lowcount=80,mapping){
                   # cutoffy=0,
 
   stack<-match.arg(stack)
@@ -132,6 +132,14 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
     }
   }
   if(length(ages)==0)stop("no data contained in selected columns")
+
+  if(missing(categories)){
+    categories<-data.frame(stringsAsFactors = FALSE)
+  }
+
+  if(missing(mapping)){
+    mapping<-aes()
+  }
 
   # set/check limits, adapt if splitat is given:
   if(length(limits)<1 && is.na(limits)){
@@ -176,15 +184,46 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
     same<-FALSE
   }
   kdes<-KDEs(todist,from=limits[1],to=limits[2],bw=bw,samebandwidth=same,log=logx,adaptive=adaptive,normalise=ifelse(normalise=="none",FALSE,TRUE))
+  maxvalues<-data.frame(smpl=NULL,max=NULL)
+  #collect all in one data.frame
   plotdf<-data.frame(x=kdes$kdes[[1]]$x,stringsAsFactors=FALSE)
   for(i in seq_along(kdes$kdes)){
     curkde<-kdes$kdes[[i]]$y
+    curmax<-max(curkde,na.rm=TRUE)
     #curkde[curkde<cutoffy]<-NA
-    if(normalise=="height")curkde<-curkde/max(curkde,na.rm=TRUE)
-    plotdf[[names(kdes$kdes)[i]]]<-curkde
+    if(normalise=="height")curkde<-curkde/curmax
+    cursmpl<-names(kdes$kdes)[i]
+    plotdf[[cursmpl]]<-curkde
+    maxvalues<-rbind(maxvalues,data.frame(smpl=cursmpl,max=curmax))
   }
-  plotdf<-melt(plotdf,id.vars="x",variable.name="smpl",value.name="density",na.rm=TRUE)
+  #scaling KDEs to histograms
+  if(is.na(binwidth) || binwidth==-1){
+    bw<-provenance:::commonbandwidth(todist)
+  }else{
+    bw<-binwidth
+  }
+  histograms<-data.frame()
+  for(smpl in names(ages)){
+    curhist<-hist(ages[[smpl]],plot=FALSE,breaks=seq(limits[1],limits[length(limits)],bw))
+    if(length(histograms)==0){
+      #histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),breaks=curhist$breaks,counts=curhist$counts,mids=curhist$mids)
+      histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids)
+    }else{
+      histograms<-rbind(histograms,data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids))
+    }
+  }
+  maxcounts<-dcast(histograms,smpl~.,fun.aggregate=max,value.var="counts",na.rm=TRUE,fill=0)
+  scalefactors<-data.frame(smpl=maxcounts$smpl,f=maxcounts[[2]]/maxvalues[[2]])
+  plotdf<-as.data.frame(t(t(plotdf)*c(1,scalefactors$f)))
+  #melt data frame for plotting
+  plotdf<-melt(plotdf,id.vars="x",variable.name="smpl",value.name="density",na.rm=TRUE,stringsAsFactors=FALSE)
   plotdf$section<-1
+  #....or here
+
+  #TODO: pre-edit, rename?, fill? categories here
+
+  #add categories to plotdf
+  plotdf<-cbind(plotdf,categories[match(plotdf$smpl,row.names(categories)),])
 
   #molten input data for markers, also used for histograms:
   dm<-melt(ages,value.name="age",na.rm=TRUE)
@@ -208,26 +247,43 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
   g<-ggplot()
 
   #density:
-  g<-g+geom_density(data=plotdf,aes(x=x,y=density,fill=smpl),stat="identity",size=hw)
-  g<-g+geom_line(data=plotdf,aes(x=x,y=density),size=lw)
+  #create aesthetics for plotting:
+  paes<-aes(x=x,y=density)
+  if(is.null(mapping$fill)){
+    paes$fill<-quote(smpl)
+  }else{
+    paes$fill<-mapping$fill
+  }
+  paes$colour<-mapping$colour
+  g<-g+geom_density(data=plotdf,mapping=paes,stat="identity",size=hw,name="density")
+  #outline
+  paes$colour<-mapping$linecolour
+  paes$linetype<-mapping$linetype
+  if(is.null(mapping$size)){
+    g<-g+geom_line(data=plotdf,mapping=paes,size=lw,name="density")
+  }else{
+    paes$size<-mapping$size
+    g<-g+geom_line(data=plotdf,mapping=paes,name="density")
+  }
 
   #histogram:
   if(hist){
-    if(is.na(binwidth) || binwidth==-1){
-      bw<-provenance:::commonbandwidth(todist)
-    }else{
-      bw<-binwidth
-    }
-    hdata<-stat_bin(data=dm,aes(x=age,y=..count..,group=smpl),binwidth=bw,fill=NA,colour="grey40",size=hw,drop=TRUE)
+    #hdata<-stat_bin(data=dm,aes(x=age,y=..count..,group=smpl),binwidth=bw,fill=NA,colour="grey40",size=hw,drop=TRUE,name="histogram")
+    hdata<-geom_bar(data=histograms,aes(x=mids,y=counts),stat="identity",fill=NA,colour="grey40",size=hw)
     g<-g+hdata
   }
 
   #data markers:
   if(markers=="dash"){
-    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=-0.02,yend=-0.06))
+    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=-0.02,yend=-0.06),name="markers")
   }else if(markers=="circle"){
-    g<-g+geom_point(data=dm,aes(x=age,y=-0.05),colour="#00000022",size=rel(2.5))
+    g<-g+geom_point(data=dm,aes(x=age,y=-0.05),colour="#00000022",size=rel(2.5),name="markers")
   }
+
+  #plot titles:
+  annodf<-data.frame(smpl=names(ages),x=limits[length(limits)]*0.99,y=maxcounts$.,section=ifelse(length(limits)!=4,1,2),
+                     label=paste0(names(ages),sprintf(", n=%d",sapply(ages,length))))
+  g<-g+geom_text(data=annodf,aes(x=x,y=y,label=label),hjust=1.0,vjust=1.0)
 
   #breaks
   labels<-format(breaks)
@@ -252,6 +308,12 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
 
   #if no histogram, blank out y-axis:
   if(!hist)g<-g+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())
+  #if only one category, remove legend
+  if((length(unique(eval(substitute(categories$fill,mapping))))<=1)&&
+      (length(unique(eval(substitute(categories$colour,mapping))))<=1)&&
+      (length(unique(eval(substitute(categories$linetype,mapping))))<=1)&&
+      (length(unique(eval(substitute(categories$size,mapping))))<=1))
+    g<-g+theme(legend.position="none")
 
   return(g)
 }
