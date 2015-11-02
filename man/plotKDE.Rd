@@ -4,12 +4,12 @@
 \alias{plotKDE}
 \title{Plot one or several KDEs using ggplot2.}
 \usage{
-plotKDE(ages, title, limits = c(0, 3000), breaks = NA, bandwidth = NA,
-  plotonly = names(ages), splitat = NA, categories = NA,
-  markers = c("none", "dash", "circle"), logx = FALSE, hist = FALSE,
-  binwidth = bandwidth, adaptive = TRUE, stack = c("equal", "close",
-  "dense"), normalise = c("area", "height", "none"), lowcount = 80,
-  mapping = NA)
+plotKDE(ages, title, limits = c(0, max(unlist(agedata), na.rm = TRUE)),
+  plotonly = names(ages), categories, mapping, breaks = NA,
+  bandwidth = NA, splitat = NA, markers = c("none", "dash", "circle"),
+  logx = FALSE, histogram = FALSE, binwidth = bandwidth,
+  adaptive = TRUE, stack = c("equal", "close", "dense"),
+  normalise = c("area", "height", "none"), lowcount = 80, ...)
 }
 \arguments{
 \item{ages}{A named list of ages for each sample/data set.}
@@ -18,21 +18,21 @@ plotKDE(ages, title, limits = c(0, 3000), breaks = NA, bandwidth = NA,
 
 \item{limits}{Numerical vector giving the range of ages to plot.}
 
+\item{plotonly}{Vector of names of samples to plot.}
+
+\item{categories}{A data frame giving categorising information on samples.}
+
 \item{breaks}{Numerical vector of break values along x-axis.}
 
 \item{bandwidth}{Bandwidth for KDE and histogram calculation.}
 
-\item{plotonly}{Vector of names of samples to plot.}
-
 \item{splitat}{Numerical, split plots into left and right plot.}
-
-\item{categories}{A data frame giving categorising information on samples.}
 
 \item{markers}{Character, type of tick marks indicating input data.}
 
 \item{logx}{Boolean, plot x-axis in log-scale.}
 
-\item{hist}{Boolean, add histogram.}
+\item{histogram}{Boolean, add histogram.}
 
 \item{binwidth}{Bin width for histograms.}
 
@@ -43,6 +43,8 @@ plotKDE(ages, title, limits = c(0, 3000), breaks = NA, bandwidth = NA,
 \item{normalise}{Character, normalise KDEs to height or area (default).}
 
 \item{lowcount}{Minimum number for robust data set.}
+
+\item{...}{Additional parameters passed on to \code{KDEs}.}
 }
 \value{
 A ggplot object containing the specified plot.
@@ -82,10 +84,10 @@ sample. Any categories given can be mapped onto aesthetics with the
 indicate sampled ages. Possible values are \code{"dash"}, \code{"circle"},
 or \code{"none"} (default).
 
-If histograms are plotted (\code{hist = TRUE}), the bin width can optionally
-be set by specifying \code{binwidth}. Values of \code{NA} or \code{-1} both
-cause the binwidth to be set automatically to the median of 'optimal
-bandwidths'.
+If histograms are plotted (\code{histogram = TRUE}), the bin width can
+optionally be set by specifying \code{binwidth}. Values of \code{NA} or
+\code{-1} both cause the binwidth to be set automatically to the median of
+'optimal bandwidths'.
 
 \code{stack} specifies vertical spacing of stacked plots. One of
 \code{"equal"} (default), giving each plot the same height, \code{"close"},
@@ -95,14 +97,23 @@ possible. \code{"close"} has no effect if \code{normalise="height"}, and
 \code{"dense"} only works when \code{mapping=aes(fill=NULL)} is specified.
 
 \code{normalise} may be one of \code{"area"} (default), making KDEs the same
-area, \code{"height"}, making KDEs the same height, or \code{"none"}.
+area, \code{"height"}, making KDEs the same height, or \code{"none"}. If
+\code{histogram = TRUE}, KDEs are always normalised to area.
 
 \code{lowcount} gives the minimum number to consider a data set robust.
 Smaller sets will be drawn in a dashed line, unless the \code{linetype}
 aestetic is specified in \code{mapping}. Set to \code{-1} to disable.
+}
+\note{
+\code{normalise = "height"} can be misleading, visually
+overemphasising distributions with broad peaks.
 
 Tip: The returned ggplot object can be further modified with
 \code{ggplot2}'s functions (e.g. \code{\link{theme}}) and saved in many file
 formats using \code{\link{ggsave}}.
+}
+\seealso{
+\code{\link[ggplot2]{theme}}, \code{\link[ggplot2]{ggsave}},
+\code{\link[provenance]{plot.KDE}}
 }
 

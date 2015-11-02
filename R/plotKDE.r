@@ -39,12 +39,13 @@
 #' @param categories A data frame giving categorising information on samples.
 #' @param markers Character, type of tick marks indicating input data.
 #' @param logx Boolean, plot x-axis in log-scale.
-#' @param hist Boolean, add histogram.
+#' @param histogram Boolean, add histogram.
 #' @param binwidth Bin width for histograms.
 #' @param adaptive Boolean, use Abramson's adaptive bandwith modifier.
 #' @param stack Character, stack plots more closely (see details).
 #' @param normalise Character, normalise KDEs to height or area (default).
 #' @param lowcount Minimum number for robust data set.
+#' @param ... Additional parameters passed on to \code{KDEs}.
 #'
 #' @details If \code{limits} is of length 2 it specifies the range of ages to
 #' plot. This will be split at age \code{splitat}, if given. If \code{limits}
@@ -71,10 +72,10 @@
 #' indicate sampled ages. Possible values are \code{"dash"}, \code{"circle"},
 #' or \code{"none"} (default).
 #'
-#' If histograms are plotted (\code{hist = TRUE}), the bin width can optionally
-#' be set by specifying \code{binwidth}. Values of \code{NA} or \code{-1} both
-#' cause the binwidth to be set automatically to the median of 'optimal
-#' bandwidths'.
+#' If histograms are plotted (\code{histogram = TRUE}), the bin width can
+#' optionally be set by specifying \code{binwidth}. Values of \code{NA} or
+#' \code{-1} both cause the binwidth to be set automatically to the median of
+#' 'optimal bandwidths'.
 #'
 #' \code{stack} specifies vertical spacing of stacked plots. One of
 #' \code{"equal"} (default), giving each plot the same height, \code{"close"},
@@ -84,27 +85,34 @@
 #' \code{"dense"} only works when \code{mapping=aes(fill=NULL)} is specified.
 #'
 #' \code{normalise} may be one of \code{"area"} (default), making KDEs the same
-#' area, \code{"height"}, making KDEs the same height, or \code{"none"}.
+#' area, \code{"height"}, making KDEs the same height, or \code{"none"}. If
+#' \code{histogram = TRUE}, KDEs are always normalised to area.
 #'
 #' \code{lowcount} gives the minimum number to consider a data set robust.
 #' Smaller sets will be drawn in a dashed line, unless the \code{linetype}
 #' aestetic is specified in \code{mapping}. Set to \code{-1} to disable.
 #'
-#' Tip: The returned ggplot object can be further modified with
+#' @note \code{normalise = "height"} can be misleading, visually
+#' overemphasising distributions with broad peaks.
+#'
+#' @note Tip: The returned ggplot object can be further modified with
 #' \code{ggplot2}'s functions (e.g. \code{\link{theme}}) and saved in many file
 #' formats using \code{\link{ggsave}}.
+#'
+#' @seealso \code{\link[ggplot2]{theme}}, \code{\link[ggplot2]{ggsave}},
+#' \code{\link[provenance]{plot.KDE}}
 #'
 #' @return A ggplot object containing the specified plot.
 #'
 #' @export
 #'
-plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
-                  plotonly=names(ages),splitat=NA,categories,
-                  markers=c("none","dash","circle"),logx=FALSE,hist=FALSE,
-                  binwidth=bandwidth,adaptive=TRUE,
+plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
+                  plotonly=names(ages),categories,mapping,breaks=NA,
+                  bandwidth=NA,splitat=NA,markers=c("none","dash","circle"),
+                  logx=FALSE,histogram=FALSE,binwidth=bandwidth,adaptive=TRUE,
                   stack=c("equal","close","dense"),
-                  normalise=c("area","height","none"),lowcount=80,mapping){
-                  # cutoffy=0,
+                  normalise=c("area","height","none"),lowcount=80,...){
+                  # deleted: cutoffy=0,
 
   stack<-match.arg(stack)
   normalise<-match.arg(normalise)
@@ -183,37 +191,49 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
     bw<-NA
     same<-FALSE
   }
-  kdes<-KDEs(todist,from=limits[1],to=limits[2],bw=bw,samebandwidth=same,log=logx,adaptive=adaptive,normalise=ifelse(normalise=="none",FALSE,TRUE))
+  kdes<-KDEs(todist,from=limits[1],to=limits[2],bw=bw,samebandwidth=same,log=logx,adaptive=adaptive,
+             normalise=ifelse(normalise=="none",FALSE,TRUE),...)
   maxvalues<-data.frame(smpl=NULL,max=NULL)
   #collect all in one data.frame
   plotdf<-data.frame(x=kdes$kdes[[1]]$x,stringsAsFactors=FALSE)
   for(i in seq_along(kdes$kdes)){
     curkde<-kdes$kdes[[i]]$y
-    curmax<-max(curkde,na.rm=TRUE)
     #curkde[curkde<cutoffy]<-NA
+    curmax<-max(curkde,na.rm=TRUE)
     if(normalise=="height")curkde<-curkde/curmax
     cursmpl<-names(kdes$kdes)[i]
     plotdf[[cursmpl]]<-curkde
-    maxvalues<-rbind(maxvalues,data.frame(smpl=cursmpl,max=curmax))
+    maxvalues<-rbind(maxvalues,data.frame(smpl=cursmpl,max=ifelse(normalise=="height",1,curmax)))
   }
   #scaling KDEs to histograms
-  if(is.na(binwidth) || binwidth==-1){
-    bw<-provenance:::commonbandwidth(todist)
-  }else{
-    bw<-binwidth
-  }
-  histograms<-data.frame()
-  for(smpl in names(ages)){
-    curhist<-hist(ages[[smpl]],plot=FALSE,breaks=seq(limits[1],limits[length(limits)],bw))
-    if(length(histograms)==0){
-      #histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),breaks=curhist$breaks,counts=curhist$counts,mids=curhist$mids)
-      histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids)
+  if(histogram){
+    if(is.na(binwidth) || binwidth==-1){
+      bw<-provenance:::commonbandwidth(todist)
     }else{
-      histograms<-rbind(histograms,data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids))
+      bw<-binwidth
     }
+    histograms<-data.frame()
+    if(length(limits==2)){
+      hages<-lapply(ages,function(x){return(x[x>=limits[1] & x<=limits[2]])})
+    }else if(length(limits==4)){
+      hages<-lapply(ages,function(x){return(x[(x>=limits[1] & x<=limits[2]) | (x>=limits[3] & x<=limits[4])])})
+    }
+    for(smpl in names(hages)){
+      curhist<-hist(hages[[smpl]],plot=FALSE,breaks=seq(limits[1],limits[length(limits)],bw),right=TRUE)
+      if(length(histograms)==0){
+        #histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),breaks=curhist$breaks,counts=curhist$counts,mids=curhist$mids)
+        histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids)
+      }else{
+        histograms<-rbind(histograms,data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids))
+      }
+    }
+    maxcounts<-dcast(histograms,smpl~.,fun.aggregate=max,value.var="counts",na.rm=TRUE,fill=0)
+    names(maxcounts)[names(maxcounts)=="."]<-"max"
+    if(normalise=="height")warning("when plotting histograms, KDEs are always normalised to area")
+  }else{
+    maxcounts<-data.frame(smpl=names(ages),max=maxvalues$max,stringsAsFactors=FALSE)
   }
-  maxcounts<-dcast(histograms,smpl~.,fun.aggregate=max,value.var="counts",na.rm=TRUE,fill=0)
-  scalefactors<-data.frame(smpl=maxcounts$smpl,f=maxcounts[[2]]/maxvalues[[2]])
+  scalefactors<-data.frame(smpl=maxcounts$smpl,f=maxcounts$max/maxvalues$max,stringsAsFactors=FALSE)
   plotdf<-as.data.frame(t(t(plotdf)*c(1,scalefactors$f)))
   #melt data frame for plotting
   plotdf<-melt(plotdf,id.vars="x",variable.name="smpl",value.name="density",na.rm=TRUE,stringsAsFactors=FALSE)
@@ -225,11 +245,13 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
   #add categories to plotdf
   plotdf<-cbind(plotdf,categories[match(plotdf$smpl,row.names(categories)),])
 
-  #molten input data for markers, also used for histograms:
+  #molten input data for markers:
   dm<-melt(ages,value.name="age",na.rm=TRUE)
   names(dm)[names(dm)=="L1"]<-"smpl"
   dm$section<-1
   dm<-dm[dm$age>=limits[1] & dm$age<=limits[2],]
+  dm$y<- -0.00015*scalefactors$f[match(dm$smpl,scalefactors$smpl)]
+  dm$ye<- -0.00035*scalefactors$f[match(dm$smpl,scalefactors$smpl)]
 #   dm$bw<-bw1
 #   if(length(limits)==4){
 #     dm$section[((dm$age>=limits[3])&(dm$age<=limits[4]))]<-2
@@ -243,7 +265,8 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
 
   #create plot:
   lw<-rel(0.6)
-  hw<-rel(0.2)
+  hw<-rel(0.3)
+  ow<-rel(0.1)
   g<-ggplot()
 
   #density:
@@ -254,10 +277,9 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
   }else{
     paes$fill<-mapping$fill
   }
-  paes$colour<-mapping$colour
-  g<-g+geom_density(data=plotdf,mapping=paes,stat="identity",size=hw,name="density")
+  g<-g+geom_density(data=plotdf,mapping=paes,stat="identity",size=ow,name="density")
   #outline
-  paes$colour<-mapping$linecolour
+  paes$colour<-mapping$colour
   paes$linetype<-mapping$linetype
   if(is.null(mapping$size)){
     g<-g+geom_line(data=plotdf,mapping=paes,size=lw,name="density")
@@ -267,21 +289,22 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
   }
 
   #histogram:
-  if(hist){
+  if(histogram){
     #hdata<-stat_bin(data=dm,aes(x=age,y=..count..,group=smpl),binwidth=bw,fill=NA,colour="grey40",size=hw,drop=TRUE,name="histogram")
-    hdata<-geom_bar(data=histograms,aes(x=mids,y=counts),stat="identity",fill=NA,colour="grey40",size=hw)
+    hdata<-geom_bar(data=histograms,aes(x=mids,y=counts),stat="identity",fill=NA,colour="grey30",size=hw)
     g<-g+hdata
+    g<-g+scale_y_continuous("frequency")
   }
 
   #data markers:
   if(markers=="dash"){
-    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=-0.02,yend=-0.06),name="markers")
+    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=y,yend=ye),name="markers")
   }else if(markers=="circle"){
-    g<-g+geom_point(data=dm,aes(x=age,y=-0.05),colour="#00000022",size=rel(2.5),name="markers")
+    g<-g+geom_point(data=dm,aes(x=age,y=y+(ye-y)/2),colour="#00000022",size=rel(3),name="markers")
   }
 
   #plot titles:
-  annodf<-data.frame(smpl=names(ages),x=limits[length(limits)]*0.99,y=maxcounts$.,section=ifelse(length(limits)!=4,1,2),
+  annodf<-data.frame(smpl=names(ages),x=limits[length(limits)]*0.99,y=maxcounts$max,section=ifelse(length(limits)!=4,1,2),
                      label=paste0(names(ages),sprintf(", n=%d",sapply(ages,length))))
   g<-g+geom_text(data=annodf,aes(x=x,y=y,label=label),hjust=1.0,vjust=1.0)
 
@@ -307,7 +330,7 @@ plotKDE<-function(ages,title,limits=c(0,3000),breaks=NA,bandwidth=NA,
           panel.grid.minor.x=element_blank(),panel.background=element_blank())
 
   #if no histogram, blank out y-axis:
-  if(!hist)g<-g+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())
+  if(!histogram)g<-g+theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.ticks.y=element_blank())
   #if only one category, remove legend
   if((length(unique(eval(substitute(categories$fill,mapping))))<=1)&&
       (length(unique(eval(substitute(categories$colour,mapping))))<=1)&&
