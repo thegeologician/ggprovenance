@@ -36,11 +36,12 @@
 #' @seealso \code{\link{read.xls.tabbed}}, \code{\link[gdata]{read.xls}}
 #'
 #' @keywords internal
-#' @export
 #'
 #' @examples
 #' datafile<-system.file("extdata", "Tarim.xls", package="ggprovenance")
 #' agedata<-read.xls.flat(datafile)
+#'
+#' @export
 read.xls.tabbed<-function(filename,sheets=NULL,age.column="preferred.age",verbose=TRUE,...){
   # reads an XLS/XLSX file that contains age data in one sheet per data set/sample.
   # returns a list of the values of age.column in each sheet (or the sheets
@@ -89,11 +90,12 @@ read.xls.tabbed<-function(filename,sheets=NULL,age.column="preferred.age",verbos
 #' @seealso \code{\link{read.xls.tabbed}}, \code{\link[gdata]{read.xls}}
 #'
 #' @keywords internal
-#' @export
 #'
 #' @examples
 #' datafile<-system.file("extdata", "Tarim.xls", package="ggprovenance")
 #' agedata<-read.xls.flat(datafile)
+#'
+#' @export
 read.xls.flat<-function(filename,...){
   # very minimal wrapper around read.xls, reading an XLS/XLSX file containing
   # age data in columns (per sample/data set), returns a list
@@ -114,6 +116,7 @@ read.xls.flat<-function(filename,...){
 #'
 #' @return A \code{distributional} object for use with package \code{provenance}.
 #' @keywords internal
+#'
 #' @export
 as.distributional<-function(x,err=NULL,method=c("KS","SH"),xlabel="Ma",range=NULL){
   # convert a raw list of distributional data (ages) to a 'distributional' object

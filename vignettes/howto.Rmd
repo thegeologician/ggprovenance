@@ -9,6 +9,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE,fig.width=6,fig.height=4)
+```
+
 # Introduction {#intro}
 Package `provenance` provides functions for the visualisation of typical data utilised in sediment provenance analysis in the geosciences, as well as helper functions aiding data analysis. Plotting takes advantage of the framework provided by the `ggplot2` package, and the output plots are ggplot objects, which allows for further modification with `ggplot2`'s functions and easy saving of the graphics. This document is meant for geoscientists who want to get step-by-step guidelines for using `provenance`'s plotting functions, and who might not be experienced users of the R language.  
 The "workhorse functions" of the package are:
@@ -88,6 +92,7 @@ plotKDE(agedata)
 
 With the `cats` variable we generated, and some additional adjustments, we can make this a little clearer. See the [examples](#examples) and help files for details.
 ```{r}
+names(cats)
 plotKDE(agedata,categories=cats,markers="dash",stack="close",limits=c(0,3500),mapping=aes(fill=area))
 ```
 
@@ -166,12 +171,12 @@ plotKDE(agedata,logx=TRUE)
 
 Split plot at a certain age, the two sub-ranges will occupy equal space (useful to emphasise the younger ages).
 ```{r}
-plotKDE(agedata,splitat=600)
+#plotKDE(agedata,splitat=600)
 ```
 
 Splitting can be combined with custom ranges for the two half plots. A `limits` parameter of length 4 will override `splitat`.
 ```{r}
-plotKDE(agedata,limits=c(50,600,1600,2800))
+#plotKDE(agedata,limits=c(50,600,1600,2800))
 ```
 
 Usually, an "optimal bandwidth" is calculated automatically, and the median of all optimal bandwidths for all data series is set equally for all KDEs. It can also be set manually.
@@ -191,13 +196,15 @@ plotKDE(agedata,categories=cats, mapping=aes(fill=area))
 It is often easier to prepare the categories as a separate table/file, and load them from there. For finding the optimal data visualisation, this table can then easily adapted and reloaded until the desired plot is produced:
 ```{r}
 # load categories:
-cats<-read.table(file=system.file("extdata", "categories.csv", package="ggprovenance"),header=TRUE,row.names=1,sep=",")
+cats<-read.table(file=system.file("extdata", "categories.csv", package="ggprovenance"),header=TRUE,row.names=1,sep=",",stringsAsFactors=FALSE)
 plotKDE(agedata,categories=cats,mapping=aes(fill=area,linetype=type),limits=c(0,1200),stack="close",bandwidth=-1)
 # adapt categories.csv to needs, re-run, repeat...
 
 ```
 
 `order`
+
+`title`
 
 
 ### Examples of combining parameters:

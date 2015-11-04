@@ -37,6 +37,7 @@
 #' @param plotonly Vector of names of samples to plot.
 #' @param splitat Numerical, split plots into left and right plot.
 #' @param categories A data frame giving categorising information on samples.
+#' @param mapping Aesthetic mapping, see \code{\link[ggplot2]{aes}}.
 #' @param markers Character, type of tick marks indicating input data.
 #' @param logx Boolean, plot x-axis in log-scale.
 #' @param histogram Boolean, add histogram.
@@ -105,7 +106,6 @@
 #' @return A ggplot object containing the specified plot.
 #'
 #' @export
-#'
 plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
                   plotonly=names(ages),categories,mapping,breaks=NA,
                   bandwidth=NA,splitat=NA,markers=c("none","dash","circle"),
@@ -113,6 +113,15 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
                   stack=c("equal","close","dense"),
                   normalise=c("area","height","none"),lowcount=80,...){
                   # deleted: cutoffy=0,
+
+  # TODO: calc limits on data subset by plotonly
+  # TODO: pseudo-aesthetic "title" - allow a variable from categories to set individual titles
+  # TODO: stack="dense" - ignore fill with a warning
+  # TODO: lowcount - ignore linetype with a warning
+  # TODO: splitat and limits of length 4
+  # FIXME: markers sizing when normalise="area" (incl. histogram=TRUE)
+  # TODO: pseudo-aesthetic "order" to set plotting (and legend) order
+  # FIXME: categories seem not to work if only one variable!?
 
   stack<-match.arg(stack)
   normalise<-match.arg(normalise)
@@ -243,7 +252,9 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
   #TODO: pre-edit, rename?, fill? categories here
 
   #add categories to plotdf
-  plotdf<-cbind(plotdf,categories[match(plotdf$smpl,row.names(categories)),])
+  plotdf<-cbind(plotdf,categories[match(plotdf$smpl,row.names(categories)),],stringsAsFactors=FALSE)
+  #work-around: for some reason, cbind drops the column name if categories contains only one variable
+  if(length(categories)==1)names(plotdf)[length(plotdf)]<-names(categories)[1]
 
   #molten input data for markers:
   dm<-melt(ages,value.name="age",na.rm=TRUE)

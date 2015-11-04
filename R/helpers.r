@@ -33,7 +33,6 @@
 #'
 #' @keywords internal
 #' @export
-#'
 prettyBreaks<-function(range, inner=TRUE, logsc=FALSE, majors=TRUE, minors=FALSE,
                        n.major=8,n.minor=0, force.limits=FALSE, frac.log=FALSE){
 
