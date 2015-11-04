@@ -19,15 +19,28 @@
 ##
 #########################################
 
-plotDendrogram<-function(data,orientation=4,type=2,positions=c(1:length(data)),metric=c("K-S","C-v-M"),method="ward.D",classes=1){
-  #plots a dendrogram for the given data, according to specified metric
-  #wrapper for clustree(), see there for further parameters
-  #classes ... cuts tree into classes branches, colours leaves accordingly
+#' Plot a dendrogram
+#'
+#' @param data Data to compare.
+#' @param orientation See \code{\link{clustree}}.
+#' @param type See \code{\link{clustree}}.
+#' @param positions See \code{\link{clustree}}.
+#' @param metric Metric to compare samples within data.
+#' @param method Agglomeration method, see \code{\link[stats]{hclust}}.
+#' @param classes Cut tree into branches.
+#'
+#' @return A ggplot2 object containing the specified dendrogram.
+#' @seealso \code{\link{clustree}}, \code{\link[stats]{hclust}}, \code{\link[provenance]{diss}}
+#' @export
+plotDendrogram<-function(data,orientation=4,type=2,positions=c(1:length(data)),
+                         metric=c("KS","SH","aitchinson","bray"),
+                         method="ward.D",classes=1){
 
-  #TODO: improve colouring of branches to include all lines of one branch
-  #      maybe implement in clustree rather, and return as extra column in $segments
+    # TODO: check on data...
 
-  diss<-dissimilarity(data,metric=metric)
+  metric<-match.arg(metric)
+
+  diss<-provenance::diss(as.distributional(data),method=metric)
   closest<-hclust(as.dist(diss),method=method)
 
   ids<-match(c(1:length(closest$labels)),closest$order)
@@ -41,15 +54,30 @@ plotDendrogram<-function(data,orientation=4,type=2,positions=c(1:length(data)),m
   return(g)
 }
 
+#' Parse a hclust structure for plotting
+#'
+#' @details Takes a hclust structure and returns rendered coordinates to draw
+#' the tree, according to \code{orientation} and \code{type} parameters. Also
+#' returns leaf labels. Generates segments of tree based on pre-calculated
+#' coordinates for leaves and in any orientation, unlike \code{plot.hclust} or
+#' package \code{ggdendro}.
+
+#' @param atree An object of class \code{hclust}.
+#' @param orientation Branching direction: 1 top-down, 2 right-to-left, 3
+#' bottom-up, 4 left-to-right.
+#' @param type 1 uniform height steps, 2 calculated by hclust with base = 0, 3
+#' same as 2, with base = height from hclust.
+#' @param positions Takes 'y'-positions in the order of drawing layout
+#' (atree$order), i.e. ascending values.
+#' @param classes Cut tree into sub-branches, return as column in $segments
+#' and $leaves.
+#'
+#' @return List of geometric elements for plotting the tree structure and
+#' labels.
+#' @keywords internal
+#' @seealso \code{\link[stats]{hclust}}
+#' @export
 clustree<-function(atree,orientation=c(1:4),type=c(1,2),positions=NULL,classes=1){
-  #takes a hclust structure and returns rendered coordinates to draw the tree,
-  #according to orientation and type parameters. Also returns leaf labels.
-  #generates segments of tree based on pre-calculated coordinates for leaves and in any orientation,
-  #unlike plot.hclust() or package ggdendro.
-  #positions takes y-positions in the order of drawing layout (atree$order), i.e. ascending values
-  #orientations ... braching direction: 1 top-down, 2 right-to-left, 3 bottom-up, 4 left-to-right
-  #type ... 1 uniform height steps, 2 calculated by hclust w/base 0, 3 same as 2, w/base = height from hclust
-  #classes ... cut tree into classes sub-branches, return as column in $segments and $leaves
 
   #TODO: type==3
 

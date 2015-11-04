@@ -116,12 +116,11 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
 
   # TODO: calc limits on data subset by plotonly
   # TODO: pseudo-aesthetic "title" - allow a variable from categories to set individual titles
-  # TODO: stack="dense" - ignore fill with a warning
-  # TODO: lowcount - ignore linetype with a warning
+  # TODO: stack="dense" - +ignore fill with a warning
+  # TODO: lowcount - +ignore linetype with a warning
   # TODO: splitat and limits of length 4
   # FIXME: markers sizing when normalise="area" (incl. histogram=TRUE)
   # TODO: pseudo-aesthetic "order" to set plotting (and legend) order
-  # FIXME: categories seem not to work if only one variable!?
 
   stack<-match.arg(stack)
   normalise<-match.arg(normalise)

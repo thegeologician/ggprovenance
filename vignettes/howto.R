@@ -1,5 +1,5 @@
 ## ----setup, include=FALSE------------------------------------------------
-knitr::opts_chunk$set(cache=TRUE,fig.width=12,fig.height=8,out.width=6,out.height=4)
+knitr::opts_chunk$set(cache=TRUE,fig.width=6,fig.height=4)
 
 ## ----message=FALSE-------------------------------------------------------
 library(ggprovenance)

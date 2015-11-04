@@ -19,8 +19,35 @@
 ##
 #########################################
 
+#' Plotting multi-dimensional scaling maps.
+#'
+#' @param x Input data. Optional (see \code{diss}.
+#' @param diss Optional distances/dissimilarity matrix. Mandatory if \code{x}
+#' is missing.
+#' @param categories A data frame giving categorising information on samples.
+#' @param mapping Aesthetic mapping, see \code{\link[ggplot2]{aes}}.
+#' @param nearest Plot lines connecting nearest distances.
+#' @param fixed Plot in fixed (1:1) aspect ratio.
+#' @param axes Plot axes tick marks.
+#' @param square Expand plot area to yield square plot.
+#' @param metric Metric to use in dissimilarity calculation.
+#'
+#' @return A ggplot object containing the specified plot.
+#'
+#' @export
+plotMDS<-function(x,diss,categories,mapping,nearest=TRUE,fixed=FALSE,
+                  axes=FALSE,square=FALSE,metric=c("K-S","C-v-M")){
+  # x ... optional! list of one- or two-dimensional vectors/data.frames/matrices, which causes distributional
+  #       compositional data to be assumed.
+  # diss ... optional distance matrix. If x is missing, diss must be given, and vice versa, or both, in which
+  #           case diss is taken as the calculated distances, to which the plotted are compared (nearest=TRUE).
+  # categories, mapping ... like plotKDE()
+  # fixed ... Fixed asect ratio.
+  # square ... Expand shorter plot range to obtain square plot.
+}
+
 # define a function to plot the MDS coordinates and connect the nearest neighbours, ggplot2-style
-plotMDS <- function(mds,diss,col="",sym="",nearest=TRUE,labels=TRUE,symbols=TRUE,fcolour=NA,
+plotMDSo <- function(mds,diss,col="",sym="",nearest=TRUE,labels=TRUE,symbols=TRUE,fcolour=NA,
                     stretch=FALSE,axes=FALSE,expand=FALSE) {
   #quick and dirty, makes big assumptions about what mds looks like if it's not a two-column matrix.
   #mds can be: data.frame(x,y,any,further,columns,...)

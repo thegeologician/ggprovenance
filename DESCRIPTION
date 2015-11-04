@@ -13,7 +13,9 @@ Description: Plotting functions wrapping extended and user friendly graphical
 License: GPL >= 2
 LazyData: TRUE
 Depends:
-    provenance,ggplot2,gdata,scales,reshape2
+    provenance,ggplot2
+Imports:
+    gdata,scales,reshape2
 Suggests:
     knitr,
     rmarkdown
