@@ -49,7 +49,8 @@ For this document, we use example data files installed with `ggprovenance`, but 
 ### Loading data files
 In the `/extdata` folder, there is a simple example file of detrital zircon U-Pb ages. The individual measured ages are arranged column-wise, one column per sample, with the sample names in the first line.  
 ```{r, results='asis', echo=FALSE}
-table<-read.xls(xls=system.file("extdata", "Tarim.xls", package="ggprovenance"),stringsAsFactors=FALSE)
+table<-read.xls(xls=system.file("extdata", "Tarim.xls", package="ggprovenance"),
+                stringsAsFactors=FALSE)
 knitr::kable(table[1:6,],format="markdown")
 ```
 
@@ -159,7 +160,7 @@ Custom breaks. The `breaks` parameter overrides `limits`, i.e. if any breaks lie
 plotKDE(agedata,plot=c("Tb22"),breaks=seq(200,2800,200))
 ```
 
-Change x- (time-) limits. Set limits to -1 to automatically use the range of values contained in `data`.
+Change x- (time-) limits. Leaving out limits will automatically use the range of values contained in `data`.
 ```{r}
 plotKDE(agedata, limits=c(50,600))
 ```
@@ -179,7 +180,7 @@ Splitting can be combined with custom ranges for the two half plots. A `limits` 
 #plotKDE(agedata,limits=c(50,600,1600,2800))
 ```
 
-Usually, an "optimal bandwidth" is calculated automatically, and the median of all optimal bandwidths for all data series is set equally for all KDEs. It can also be set manually.
+Usually, an "optimal bandwidth" is calculated automatically for each data series, and the median of all optimal bandwidths for all data series is set equally for all KDEs. It can also be set manually.
 ```{r}
 plotKDE(agedata, bandwidth=15)
 ```
@@ -196,8 +197,10 @@ plotKDE(agedata,categories=cats, mapping=aes(fill=area))
 It is often easier to prepare the categories as a separate table/file, and load them from there. For finding the optimal data visualisation, this table can then easily adapted and reloaded until the desired plot is produced:
 ```{r}
 # load categories:
-cats<-read.table(file=system.file("extdata", "categories.csv", package="ggprovenance"),header=TRUE,row.names=1,sep=",",stringsAsFactors=FALSE)
-plotKDE(agedata,categories=cats,mapping=aes(fill=area,linetype=type),limits=c(0,1200),stack="close",bandwidth=-1)
+cats<-read.table(file=system.file("extdata", "categories.csv", package="ggprovenance"),
+                 header=TRUE,row.names=1,sep=",",stringsAsFactors=FALSE)
+plotKDE(agedata,categories=cats,mapping=aes(fill=area,linetype=type),
+        limits=c(0,1200),stack="close",bandwidth=-1)
 # adapt categories.csv to needs, re-run, repeat...
 
 ```
@@ -208,13 +211,14 @@ plotKDE(agedata,categories=cats,mapping=aes(fill=area,linetype=type),limits=c(0,
 
 
 ### Examples of combining parameters:
-Nice combined colour plot
+Nice combined colour plot  
+t.b.a.
 
-
-custom breaks on a log scale
+Custom breaks on a log scale  
+t.b.a.
 
 Publication-quality pure black & white plot
-```{r}
+```{r echo=FALSE, eval=FALSE}
 plotKDE(agedata,aes(fill="black"))+theme(panel.background=element_blank(),
 	panel.grid=element_blank(),axis.ticks=element_line(colour="black"),
 	axis.text=element_text(size=rel(0.8), colour="black"))
@@ -222,8 +226,10 @@ plotKDE(agedata,aes(fill="black"))+theme(panel.background=element_blank(),
 
 Add annotation to plots
 ```{r}
-g<-plotKDE(agedata,bandwidth=-1,plotonly=c("Tb38","Tb35","Tb50","Tb22"),normalise="height",logx=TRUE,limits=c(50,3200))
-g+annotate("rect",xmin=c(90,260,385),xmax=c(125,320,490),ymin=0,ymax=1.1,fill=c("#FF000022","#00FF0022","#0000FF22"),colour="black")
+g<-plotKDE(agedata,bandwidth=-1,logx=TRUE,limits=c(50,3200),
+           plotonly=c("Tb38","Tb35","Tb50","Tb22"),normalise="height")
+g+annotate("rect",xmin=c(90,260,385),xmax=c(125,320,490),ymin=0,ymax=1.1,
+           fill=c("#FF000022","#00FF0022","#0000FF22"),colour="black")
 ```
 
 ## `plotMDS()`
@@ -239,12 +245,6 @@ plotMDS(mds, diss, col="", sym="", nearest=TRUE, labels=TRUE, symbols=TRUE,
 plotShepard(mds, diss, xlab="dissimilarity", ylab="distance", title="")
 ```
 
-### `dissimilarity()`
-```{r eval=FALSE}
-dissimilarity(agedata, metric="K-S")
-```
-
 ### `plotDendrogram()`
 
 ### `plotTernary()`
-\pagebreak
