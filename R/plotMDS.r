@@ -41,9 +41,28 @@ plotMDS<-function(x,diss,categories,mapping,nearest=TRUE,fixed=FALSE,
   #       compositional data to be assumed.
   # diss ... optional distance matrix. If x is missing, diss must be given, and vice versa, or both, in which
   #           case diss is taken as the calculated distances, to which the plotted are compared (nearest=TRUE).
-  # categories, mapping ... like plotKDE()
-  # fixed ... Fixed asect ratio.
-  # square ... Expand shorter plot range to obtain square plot.
+
+  if(missing(x) & missing(diss))stop("x and diss can not both be omitted")
+  if(missing(x)){
+    if(!(is.matrix(diss) || is.data.frame(diss)))stop("diss of wrong format with x missing")
+  }
+  if(is.list(x)){
+    if(!((all(sapply(x,is.numeric))&all(sapply(x,is.vector))) ||
+         (all(sapply(x,is.data.frame))&all(sapply(unlist(x),is.numeric))))){
+      stop("can only handle numeric data in x")
+    }
+  }
+  # TODO: many more tests
+  # TODO: handle mixed data frames, by supplying the names of the actual data to compare...
+
+#   zrndiss=dissimilarity(zrndata)
+#   zrnmds<-isoMDS(as.matrix(zrndiss))$points
+#   zrnmds<-as.data.frame(zrnmds)
+#   names(zrnmds)<-c("x","y")
+#   zrnmds$smpl<-row.names(zrnmds)
+#   zrnmds$site<-site
+
+
 }
 
 # define a function to plot the MDS coordinates and connect the nearest neighbours, ggplot2-style

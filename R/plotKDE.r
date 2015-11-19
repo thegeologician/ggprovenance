@@ -106,7 +106,7 @@
 #' @return A ggplot object containing the specified plot.
 #'
 #' @export
-plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
+plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
                   plotonly=names(ages),categories,mapping,breaks=NA,
                   bandwidth=NA,splitat=NA,markers=c("none","dash","circle"),
                   logx=FALSE,histogram=FALSE,binwidth=bandwidth,adaptive=TRUE,
@@ -121,6 +121,8 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
   # TODO: splitat and limits of length 4
   # FIXME: markers sizing when normalise="area" (incl. histogram=TRUE)
   # TODO: pseudo-aesthetic "order" to set plotting (and legend) order
+  # FIXME: histogram bin sizes on log scale
+  # FIXME: markers don't work in log scale
 
   stack<-match.arg(stack)
   normalise<-match.arg(normalise)
@@ -177,7 +179,7 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(agedata),na.rm=TRUE)),
   if(logx)limits[limits<=0]<-minage
 
   # Check on breaks...
-  if(is.na(breaks)){
+  if(if(length(breaks)<1 && is.na(breaks)){
     if(logx){
       #breaks<-log_breaks()(limits)
       breaks<-prettyBreaks(limits,logsc=logx,frac.log=TRUE)
