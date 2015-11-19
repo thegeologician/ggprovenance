@@ -229,7 +229,7 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
       hages<-lapply(ages,function(x){return(x[(x>=limits[1] & x<=limits[2]) | (x>=limits[3] & x<=limits[4])])})
     }
     for(smpl in names(hages)){
-      curhist<-hist(hages[[smpl]],plot=FALSE,breaks=seq(limits[1],limits[length(limits)],bw),right=TRUE)
+      curhist<-hist(hages[[smpl]],plot=FALSE,breaks=seq(limits[1],limits[length(limits)]+bw,bw),right=TRUE)
       if(length(histograms)==0){
         #histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),breaks=curhist$breaks,counts=curhist$counts,mids=curhist$mids)
         histograms<-data.frame(smpl=rep(smpl,length(curhist$mids)),counts=curhist$counts,mids=curhist$mids)
