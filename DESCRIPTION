@@ -2,7 +2,7 @@ Package: ggprovenance
 Type: Package
 Title: Plotting of sediment provenance data, ggplot-style
 Version: 0.1
-Date: Sys.Date()
+Date: 11/18/2015
 Author: Martin Rittner
 Maintainer: Marti Rittner <sw@thegeologician.net>
 Description: Plotting functions wrapping extended and user friendly graphical

@@ -107,7 +107,7 @@
 #'
 #' @export
 plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
-                  plotonly=names(ages),categories,mapping,breaks=NA,
+                  plotonly=names(ages),categories,mapping,breaks=NULL,
                   bandwidth=NA,splitat=NA,markers=c("none","dash","circle"),
                   logx=FALSE,histogram=FALSE,binwidth=bandwidth,adaptive=TRUE,
                   stack=c("equal","close","dense"),
@@ -179,7 +179,7 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
   if(logx)limits[limits<=0]<-minage
 
   # Check on breaks...
-  if(length(breaks)<1 && is.na(breaks)){
+  if(is.null(breaks) || length(breaks)<1){
     if(logx){
       #breaks<-log_breaks()(limits)
       breaks<-prettyBreaks(limits,logsc=logx,frac.log=TRUE)

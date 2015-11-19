@@ -5,7 +5,7 @@
 \title{Plot one or several KDEs using ggplot2.}
 \usage{
 plotKDE(ages, title, limits = c(0, max(unlist(ages), na.rm = TRUE)),
-  plotonly = names(ages), categories, mapping, breaks = NA,
+  plotonly = names(ages), categories, mapping, breaks = NULL,
   bandwidth = NA, splitat = NA, markers = c("none", "dash", "circle"),
   logx = FALSE, histogram = FALSE, binwidth = bandwidth,
   adaptive = TRUE, stack = c("equal", "close", "dense"),
