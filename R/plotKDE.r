@@ -179,7 +179,7 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
   if(logx)limits[limits<=0]<-minage
 
   # Check on breaks...
-  if(if(length(breaks)<1 && is.na(breaks)){
+  if(length(breaks)<1 && is.na(breaks)){
     if(logx){
       #breaks<-log_breaks()(limits)
       breaks<-prettyBreaks(limits,logsc=logx,frac.log=TRUE)
