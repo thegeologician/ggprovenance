@@ -3,21 +3,17 @@
 ## sw@thegeologician.net               ##
 #########################################
 
-#########################################
+###############################################################################
 ##
-## functions for plotting geological
-## sediment provenance analysis data
+## functions for plotting geological sediment provenance analysis data
 ##
-## using Hadley Wickham's ggplot2 for
-## graphical output
+## using Hadley Wickham's ggplot2 for graphical output
 ##
-## maths and data transformation based on
-## Pieter Vermeesch's provenance package
+## maths and data transformation based on Pieter Vermeesch's provenance package
 ##
-## including convenience data import and
-## wrapper functions
+## including convenience data import and wrapper functions
 ##
-#########################################
+###############################################################################
 
 #' @title Plot one or several KDEs using ggplot2.
 #'
