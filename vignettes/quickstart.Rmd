@@ -32,4 +32,3 @@ KDE plots:
 ```{r}
 plotKDE(agedata,hist=TRUE,binwidth=50,markers="dash")
 ```
-
