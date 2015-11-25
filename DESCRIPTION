@@ -1,21 +1,20 @@
 Package: ggprovenance
 Type: Package
 Title: Plotting of sediment provenance data, ggplot-style
-Version: 0.1
+Version: 0.1.0
 Date: 11/18/2015
-Author: Martin Rittner
-Maintainer: Martin Rittner <sw@thegeologician.net>
+Authors@R: person("Martin", "Rittner", email = "sw@thegeologician.net",
+  role = c("aut", "cre"))
 Description: Plotting functions wrapping extended and user friendly graphical
     output around the calculations provided by package provenance. Plots are
     returned as ggplot objects, and can be further modified/combined with ggplot2's
     functions, which also provide export to many file formats. Helper functions to
     easily read common formats of input data are provided (requires ggdat).
-License: GPL >= 2
+License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
     provenance,ggplot2,reshape2,gdata,scales
 Suggests:
-    knitr,
-    rmarkdown
+    knitr,rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
