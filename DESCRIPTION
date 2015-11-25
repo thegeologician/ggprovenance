@@ -12,7 +12,7 @@ Description: Plotting functions wrapping extended and user friendly graphical
     easily read common formats of input data are provided (requires ggdat).
 License: MIT + file LICENSE
 LazyData: TRUE
-Depends:
+Depends: R (>= 3.1.0),
     provenance,ggplot2,reshape2,gdata,scales
 Suggests:
     knitr,rmarkdown
