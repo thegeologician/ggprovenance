@@ -9,4 +9,27 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-soon...
+#(Very) Short Quickstart
+
+To install the development version from GitHub:
+```
+install.packages("devtools")
+devtools::install_github("thegeologician/ggprovenance",build_vignettes = TRUE)
+```
+
+Load package and some data:
+```{r echo=FALSE}
+suppressPackageStartupMessages(library('ggprovenance'))
+```
+
+```{r message=FALSE}
+library(ggprovenance)
+path_to_data<-system.file("extdata", "Tarim.xls", package="ggprovenance")
+agedata<-read.xls.flat(path_to_data)
+```
+
+KDE plots:
+```{r}
+plotKDE(agedata,hist=TRUE,binwidth=50,markers="dash")
+```
+

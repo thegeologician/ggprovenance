@@ -14,7 +14,7 @@ To install, if you do not have `devtools` installed, run:
 
 Then pull the latest version from GitHub:
 
-    devtools::install_github("thegeologician/ggprovenance")
+    devtools::install_github("thegeologician/ggprovenance",build_vignettes = TRUE)
 
 ### Overview
 
