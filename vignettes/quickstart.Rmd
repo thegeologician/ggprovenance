@@ -10,7 +10,7 @@ vignette: >
 ---
 
 ##(Very) Short Quickstart
-
+ 
 To install the development version from GitHub:
 ```
 install.packages("devtools")
@@ -18,6 +18,10 @@ devtools::install_github("thegeologician/ggprovenance",build_vignettes = TRUE)
 ```
 
 ###Load package and some data:
+devtools::install_github("thegeologician/ggprovenance")
+```
+
+Load package and some data:
 ```{r echo=FALSE}
 suppressPackageStartupMessages(library('ggprovenance'))
 ```
