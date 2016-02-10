@@ -285,15 +285,15 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
   }else{
     paes$fill<-mapping$fill
   }
-  g<-g+geom_density(data=plotdf,mapping=paes,stat="identity",size=ow,name="density")
+  g<-g+geom_density(data=plotdf,mapping=paes,stat="identity",size=ow)
   #outline
   paes$colour<-mapping$colour
   paes$linetype<-mapping$linetype
   if(is.null(mapping$size)){
-    g<-g+geom_line(data=plotdf,mapping=paes,size=lw,name="density")
+    g<-g+geom_line(data=plotdf,mapping=paes,size=lw)
   }else{
     paes$size<-mapping$size
-    g<-g+geom_line(data=plotdf,mapping=paes,name="density")
+    g<-g+geom_line(data=plotdf,mapping=paes)
   }
 
   #histogram:
@@ -306,9 +306,9 @@ plotKDE<-function(ages,title,limits=c(0,max(unlist(ages),na.rm=TRUE)),
 
   #data markers:
   if(markers=="dash"){
-    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=y,yend=ye),name="markers")
+    g<-g+geom_segment(data=dm,aes(x=age,xend=age,y=y,yend=ye))
   }else if(markers=="circle"){
-    g<-g+geom_point(data=dm,aes(x=age,y=y+(ye-y)/2),colour="#00000022",size=rel(3),name="markers")
+    g<-g+geom_point(data=dm,aes(x=age,y=y+(ye-y)/2),colour="#00000022",size=rel(3))
   }
 
   #plot titles:

@@ -118,24 +118,30 @@ read.xls.flat<-function(filename,...){
 #' @keywords internal
 #'
 #' @export
-as.distributional<-function(x,err=NULL,method=c("KS","SH"),xlabel="Ma",range=NULL){
+as.distributional<-function(x,err=NULL,method=c("KS","SH"),xlabel="Ma",range=NULL,name="dataset"){
   # convert a raw list of distributional data (ages) to a 'distributional' object
   # cf. provenance package
   ret<-list()
-  names(ret)<-NULL
-  ret[['x']]<-x
-  if(is.null(err)){
-    ret[['err']]<-list()
-  }else{
-    ret[['err']]<-err
+  #names(ret)<-names(x)
+  ret$name<-name
+  ret$method<-match.arg(method)
+  ret$x<-list()
+  ret$err<-list()
+  if(!is.null(err)){
+    if(!dim(x)==dim(err))stop("x and err must be of same dimensions")
   }
-  ret[['method']]<-match.arg(method)
+  for(i in 1:length(x)){
+    vals<-!is.na(x[[i]])
+    ret$x[[names(x)[i]]]<-x[[i]][vals]
+    if(!is.null(err))ret$err[[names(x)[i]]]<-err[[i]][vals]
+  }
+  ret$colmap<-"rainbow"
   d<-unlist(x)
   if(is.null(range))range<-c(min(d),max(d))
   d<-d[d>=range[1] && d<=range[2]]
-  nb<-log(length(d)/length(x),base=2)+2
-  ret[['breaks']]<-seq(range[1],range[2],length.out=nb)
-  ret[['xlabel']]<-xlabel
+  nb<-log(length(d)/length(x),base=2)+1
+  ret$breaks<-seq(range[1],range[2],length.out=nb+1)
+  ret$xlab<-xlabel
   class(ret)<-"distributional"
   return(ret)
 }

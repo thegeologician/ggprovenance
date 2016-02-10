@@ -5,7 +5,7 @@
 \title{Convert a ragged list into a \code{distributional} object.}
 \usage{
 as.distributional(x, err = NULL, method = c("KS", "SH"), xlabel = "Ma",
-  range = NULL)
+  range = NULL, name = "dataset")
 }
 \arguments{
 \item{x}{List of values.}
